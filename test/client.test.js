@@ -48,7 +48,7 @@ function getClient(gameIdent, gameVersion, loadHandler, tickHandler) {
 beforeEach(function() {
     port = getPort();
     server = new Cobalt.Server({
-        maxTicksPerSecond: 200
+        maxTicksPerSecond: 512
     });
     server.setLogger(function() {});
     server.listen(port);
@@ -320,7 +320,7 @@ describe('Cobalt', function() {
                 return client.login('Testuser');
 
             }).then(function(player) {
-                return client.createRoom('Testroom', 1, 8, 200);
+                return client.createRoom('Testroom', 1, 8, 512);
 
             }).then(function(room) {
                 return room.start(0);
