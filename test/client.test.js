@@ -80,6 +80,9 @@ describe('Cobalt', function() {
             var client = getClient('cobalt', '0.01');
             client.should.be.instanceof(Cobalt.Client);
 
+            client.getGameIdent().should.be.exactly('cobalt');
+            client.getGameVersion().should.be.exactly('0.01');
+
             var event = false;
             client.on('destroy', function() {
                 event = true;
@@ -221,6 +224,7 @@ describe('Cobalt', function() {
                 client.getRooms().at(0).getSeed().should.be.a.Number;
                 client.getRooms().at(0).isStarted().should.be.exactly(true);
                 tick.should.be.exactly(0);
+                client.getRooms().at(0).getTickCount().should.be.exactly(0);
                 players.should.have.length(1);
 
                 var events = players.at(0).getEvents();
@@ -649,6 +653,8 @@ describe('Cobalt', function() {
             }, function tickHandler(tick, players) {
 
                 var events = players.at(0).getEvents();
+
+                client.getRooms().at(0).getTickCount().should.be.exactly(tick);
 
                 if (tick === 0) {
                     should(events).instanceof(Array);
