@@ -33,7 +33,7 @@ module.exports = function(grunt) {
     });
 
     // Custom Tasks -----------------------------------------------------------
-    grunt.registerTask('browser', function() {
+    grunt.registerTask('build', function() {
 
         var header = '(function() { var require = function(mod) { if (mod === "bluebird") { return Promise; } };',
             footer = '})()';
@@ -53,7 +53,11 @@ module.exports = function(grunt) {
             } catch(e) {
             }
 
-            fs.writeFileSync('dist/browser.js', header + buf + footer);
+            fs.writeFileSync(
+                'dist/cobalt.js',
+                (header + buf + footer).replace(/require/g, '_require')
+            );
+
             done();
 
         });
