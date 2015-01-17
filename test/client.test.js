@@ -47,7 +47,9 @@ function getClient(gameIdent, gameVersion, loadHandler, tickHandler) {
 
 beforeEach(function() {
     port = getPort();
-    server = new Cobalt.Server();
+    server = new Cobalt.Server({
+        maxTicksPerSecond: 200
+    });
     server.setLogger(function() {});
     server.listen(port);
 });
@@ -261,7 +263,7 @@ describe('Cobalt', function() {
 
         it('should start a room with a countdown and emit the corresponding events', function(done) {
 
-            this.timeout(3000);
+            this.timeout(5000);
 
             var countdown = 1;
             var client = getClient('cobalt', '0.01', function loadHandler(params, deffered) {
@@ -289,6 +291,39 @@ describe('Cobalt', function() {
                 return room.start(countdown).then(function(room) {
                     room.getCountdown().should.be.exactly(-1);
                 });
+
+            }).catch(done);
+
+        });
+
+        it('should start a room and correctly increase the ticks', function(done) {
+
+            this.timeout(5000);
+
+            var lastTick = -1;
+
+            var client = getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+                deffered.resolve();
+
+            }, function tickHandler(tick, players) {
+
+                should(tick - lastTick).be.exactly(1);
+                lastTick = tick;
+
+                if (tick === 513) {
+                    done();
+                }
+
+            });
+
+            client.connect(port, 'localhost').then(function() {
+                return client.login('Testuser');
+
+            }).then(function(player) {
+                return client.createRoom('Testroom', 1, 8, 200);
+
+            }).then(function(room) {
+                return room.start(0);
 
             }).catch(done);
 
