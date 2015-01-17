@@ -1,0 +1,26 @@
+{
+  "version": "0.1.0",
+  "name": "cobalt",
+  "description": "",
+  "keywords": [],
+  "homepage": "",
+  "author": "Ivo Wetzel <ivo.wetzel@googlemail.com> (https://github.com/BonsaiDen)",
+  "dependencies": {
+    "bison": "^1.1.1",
+    "bluebird": "^2.6.2",
+    "lithium": "^0.1.1"
+  },
+  "engines": {
+    "node": ">=0.10",
+    "npm": ">= 1"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "grunt-mocha-istanbul": "^2.2.0",
+    "grunt-mocha-test": "^0.12.6",
+    "istanbul": "^0.3.5",
+    "should": "^4.5.0",
+    "websocket": "^1.0.14",
+    "browserify": "~8.1.1"
+  }
+}
