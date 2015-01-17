@@ -9,7 +9,7 @@ It serves as game independent messaging server between the clients.
 
 ## Features
 
-- Player login (TODO: Add OAuth Support)
+- Player login 
 - Room creation (with optional password support)
 - Room ownership management
 - Game specific room settings (TickRate, Min / Max Players)
@@ -24,6 +24,11 @@ It serves as game independent messaging server between the clients.
 
 __General__
 
+- Add support for "authenticated" player login
+
+    - Via OAuth2
+    - Specify allowed providers during room creation
+
 - Add support for room owners to alter min / max player count after room creation
 
     - Kick superflous players from the room
@@ -32,6 +37,8 @@ __General__
     - Add support for banning from rooms via IP
 
 - Add support for the owner to cancel the room countdown 
+
+- Add support for players requesting a game pause (only X allowed, configured during room creation)
 
 - Add support for players needing to mark themselves as ready before countdown can be started
 
