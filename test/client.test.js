@@ -447,6 +447,126 @@ describe('Cobalt', function() {
 
         });
 
+        it('should send player events and receive them back on the next tick in a started room', function(done) {
+
+            var client = getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+                deffered.resolve();
+
+            }, function tickHandler(tick, players) {
+
+                var events = players.at(0).getEvents();
+
+                client.getRooms().at(0).getTickCount().should.be.exactly(tick);
+
+                if (tick === 0) {
+                    should(events).instanceof(Array);
+                    events.should.have.length(0);
+                    client.getPlayer().send({ action: 'click' });
+
+                } else if (tick === 1) {
+                    should(events).instanceof(Array);
+                    events.should.have.length(1);
+                    events[0].should.be.eql({ action: 'click' });
+                    client.getPlayer().send({ action: 'move' });
+                    client.getPlayer().send({ action: 'select' });
+
+                } else if (tick === 2) {
+                    should(events).instanceof(Array);
+                    events.should.have.length(2);
+                    events[0].should.be.eql({ action: 'move' });
+                    events[1].should.be.eql({ action: 'select' });
+
+                } else if (tick === 3) {
+                    should(events).instanceof(Array);
+                    events.should.have.length(0);
+                    done();
+                }
+
+            });
+
+            client.connect(port, 'localhost').then(function() {
+                return client.login('Testuser');
+
+            }).then(function(player) {
+                return client.createRoom('Testroom', 1, 8, 30);
+
+            }).then(function(room) {
+                return room.start(0);
+
+            }).catch(done);
+
+        });
+
+        it('should join a existing room with a password', function(done) {
+
+            var client = getClient('cobalt', '0.01'),
+                other;
+
+            client.connect(port, 'localhost').then(function() {
+                return client.login('Testuser');
+
+            }).then(function() {
+                return client.createRoom('Testroom', 2, 8, 20, 'passphrase');
+
+            }).then(function(r) {
+                other = getClient('cobalt', '0.01');
+                return other.connect(port, 'localhost');
+
+            }).then(function() {
+                return other.login('Otheruser');
+
+            }).then(function() {
+                return other.getRooms().at(0).join('passphrase');
+
+            }).then(function() {
+                done();
+
+            }).catch(done);
+
+        });
+
+        it('should fail to join a existing room with a incorrect password', function(done) {
+
+            var client = getClient('cobalt', '0.01'),
+                room = null,
+                other;
+
+            client.connect(port, 'localhost').then(function() {
+                return client.login('Testuser');
+
+            }).then(function() {
+                return client.createRoom('Testroom', 2, 8, 20, 'passphrase');
+
+            }).then(function(r) {
+                room = r;
+                other = getClient('cobalt', '0.01');
+                return other.connect(port, 'localhost');
+
+            }).then(function() {
+                return other.login('Otheruser');
+
+            }).then(function() {
+                return other.getRooms().at(0).join('invalidpass');
+
+            }).then(function() {
+                done(new Error('Should not be able to join room with incorrect password.'));
+
+            }, function(err) {
+                err.should.be.instanceof(Cobalt.Client.Error);
+                err.message.should.be.exactly('(43) ERROR_ROOM_INVALID_PASSWORD');
+                err.code.should.be.exactly(Cobalt.Action.ERROR_ROOM_INVALID_PASSWORD);
+                should(err.request).be.eql([room.getId(), 'invalidpass']);
+                should(err.response).be.eql(null);
+                done();
+
+            }).catch(done);
+
+        });
+
+    });
+
+    describe('Server', function() {
+
         it('should allow the current room owner to set another player as the new owner', function(done) {
 
             var client = getClient('cobalt', '0.01'),
@@ -680,84 +800,6 @@ describe('Cobalt', function() {
 
         });
 
-        it('should send player events and receive them back on the next tick in a started room', function(done) {
-
-            var client = getClient('cobalt', '0.01', function loadHandler(params, deffered) {
-                deffered.resolve();
-
-            }, function tickHandler(tick, players) {
-
-                var events = players.at(0).getEvents();
-
-                client.getRooms().at(0).getTickCount().should.be.exactly(tick);
-
-                if (tick === 0) {
-                    should(events).instanceof(Array);
-                    events.should.have.length(0);
-                    client.getPlayer().send({ action: 'click' });
-
-                } else if (tick === 1) {
-                    should(events).instanceof(Array);
-                    events.should.have.length(1);
-                    events[0].should.be.eql({ action: 'click' });
-                    client.getPlayer().send({ action: 'move' });
-                    client.getPlayer().send({ action: 'select' });
-
-                } else if (tick === 2) {
-                    should(events).instanceof(Array);
-                    events.should.have.length(2);
-                    events[0].should.be.eql({ action: 'move' });
-                    events[1].should.be.eql({ action: 'select' });
-
-                } else if (tick === 3) {
-                    should(events).instanceof(Array);
-                    events.should.have.length(0);
-                    done();
-                }
-
-            });
-
-            client.connect(port, 'localhost').then(function() {
-                return client.login('Testuser');
-
-            }).then(function(player) {
-                return client.createRoom('Testroom', 1, 8, 30);
-
-            }).then(function(room) {
-                return room.start(0);
-
-            }).catch(done);
-
-        });
-
-        it('should join a existing room with a password', function(done) {
-
-            var client = getClient('cobalt', '0.01'),
-                other;
-
-            client.connect(port, 'localhost').then(function() {
-                return client.login('Testuser');
-
-            }).then(function() {
-                return client.createRoom('Testroom', 2, 8, 20, 'passphrase');
-
-            }).then(function(r) {
-                other = getClient('cobalt', '0.01');
-                return other.connect(port, 'localhost');
-
-            }).then(function() {
-                return other.login('Otheruser');
-
-            }).then(function() {
-                return other.getRooms().at(0).join('passphrase');
-
-            }).then(function() {
-                done();
-
-            }).catch(done);
-
-        });
-
         it('should allow the owner to change the password of an existing room', function(done) {
 
             var client = getClient('cobalt', '0.01'),
@@ -789,43 +831,6 @@ describe('Cobalt', function() {
 
         });
 
-        it('should fail to join a existing room with a incorrect password', function(done) {
-
-            var client = getClient('cobalt', '0.01'),
-                room = null,
-                other;
-
-            client.connect(port, 'localhost').then(function() {
-                return client.login('Testuser');
-
-            }).then(function() {
-                return client.createRoom('Testroom', 2, 8, 20, 'passphrase');
-
-            }).then(function(r) {
-                room = r;
-                other = getClient('cobalt', '0.01');
-                return other.connect(port, 'localhost');
-
-            }).then(function() {
-                return other.login('Otheruser');
-
-            }).then(function() {
-                return other.getRooms().at(0).join('invalidpass');
-
-            }).then(function() {
-                done(new Error('Should not be able to join room with incorrect password.'));
-
-            }, function(err) {
-                err.should.be.instanceof(Cobalt.Client.Error);
-                err.message.should.be.exactly('(43) ERROR_ROOM_INVALID_PASSWORD');
-                err.code.should.be.exactly(Cobalt.Action.ERROR_ROOM_INVALID_PASSWORD);
-                should(err.request).be.eql([room.getId(), 'invalidpass']);
-                should(err.response).be.eql(null);
-                done();
-
-            }).catch(done);
-
-        });
 
         it('should update the player list after a player left', function(done) {
 
@@ -893,6 +898,59 @@ describe('Cobalt', function() {
 
             }).then(function() {
                 events.left++;
+
+            }).catch(done);
+
+        });
+
+        it('should limit then number of events a player can send per tick', function(done) {
+
+            var client = getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+                deffered.resolve();
+
+            }, function tickHandler(tick, players) {
+
+                var events = players.at(0).getEvents();
+
+                client.getRooms().at(0).getTickCount().should.be.exactly(tick);
+
+                if (tick === 0) {
+                    should(events).instanceof(Array);
+                    events.should.have.length(0);
+                    client.getPlayer().send({ action: '1' });
+                    client.getPlayer().send({ action: '2' });
+                    client.getPlayer().send({ action: '3' });
+                    client.getPlayer().send({ action: '4' });
+                    client.getPlayer().send({ action: '5' });
+                    client.getPlayer().send({ action: '6' });
+                    client.getPlayer().send({ action: '7' });
+                    client.getPlayer().send({ action: '8' });
+                    client.getPlayer().send({ action: '9' });
+
+                } else if (tick === 1) {
+                    should(events).instanceof(Array);
+                    events.should.have.length(8);
+                    events[0].should.be.eql({ action: '1' });
+                    events[1].should.be.eql({ action: '2' });
+                    events[2].should.be.eql({ action: '3' });
+                    events[3].should.be.eql({ action: '4' });
+                    events[4].should.be.eql({ action: '5' });
+                    events[5].should.be.eql({ action: '6' });
+                    events[6].should.be.eql({ action: '7' });
+                    events[7].should.be.eql({ action: '8' });
+                    done();
+                }
+
+            });
+
+            client.connect(port, 'localhost').then(function() {
+                return client.login('Testuser');
+
+            }).then(function(player) {
+                return client.createRoom('Testroom', 1, 8, 30);
+
+            }).then(function(room) {
+                return room.start(0);
 
             }).catch(done);
 
