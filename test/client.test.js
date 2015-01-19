@@ -309,12 +309,22 @@ describe('Cobalt', function() {
 
             this.timeout(5000);
 
-            var countdown = 1;
+            var countdown = 1,
+                events = {
+                    start: 0,
+                    update: 0,
+                    end: 0
+                };
+
             var client = getClient('cobalt', '0.01', function loadHandler(params, deffered) {
                 client.getRooms().at(0).getCountdown().should.be.exactly(0);
                 deffered.resolve();
 
             }, function tickHandler(tick, players) {
+                client.getRooms().at(0).getCountdown().should.be.exactly(-1);
+                events.start.should.be.exactly(1);
+                events.update.should.be.exactly(2);
+                events.end.should.be.exactly(1);
                 done();
             });
 
@@ -326,14 +336,26 @@ describe('Cobalt', function() {
 
             }).then(function(room) {
 
-                room.on('countdown', function(c) {
+                room.on('countdown.start', function(c) {
                     c.should.be.exactly(countdown);
                     c.should.be.exactly(room.getCountdown());
+                    events.start++;
+                });
+
+                room.on('countdown.update', function(c) {
+                    c.should.be.exactly(countdown);
+                    c.should.be.exactly(room.getCountdown());
+                    events.update++;
                     countdown--;
                 });
 
-                return room.start(countdown).then(function(room) {
+                room.on('countdown.end', function() {
                     room.getCountdown().should.be.exactly(-1);
+                    events.end++;
+                });
+
+                return room.start(countdown).then(function(room) {
+                    room.getCountdown().should.be.exactly(countdown);
                 });
 
             }).catch(done);
@@ -647,7 +669,7 @@ describe('Cobalt', function() {
 
             }, function(err) {
                 err.should.be.instanceof(Cobalt.Client.Error);
-                err.message.should.be.exactly('(43) ERROR_ROOM_INVALID_PASSWORD');
+                err.message.should.be.exactly('(46) ERROR_ROOM_INVALID_PASSWORD');
                 err.code.should.be.exactly(Cobalt.Action.ERROR_ROOM_INVALID_PASSWORD);
                 should(err.request).be.eql([room.getId(), 'invalidpass']);
                 should(err.response).be.eql(null);
@@ -1069,7 +1091,7 @@ describe('Cobalt', function() {
 
             }, function(err) {
                 err.should.be.instanceof(Cobalt.Client.Error);
-                err.message.should.be.exactly('(44) ERROR_PLAYER_NAME_IN_USE');
+                err.message.should.be.exactly('(47) ERROR_PLAYER_NAME_IN_USE');
                 err.code.should.be.exactly(Cobalt.Action.ERROR_PLAYER_NAME_IN_USE);
                 should(err.request).be.eql(['0.1', 'cobalt', '0.01', 'PlayerName']);
                 should(err.response).be.eql(null);
