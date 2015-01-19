@@ -36,8 +36,6 @@ __General__
 - Add support for kicking / banning players from the room
     - Add support for banning from rooms via IP
 
-- Add support for the owner to cancel the room countdown 
-
 - Add support for players requesting a game pause (only X allowed, configured during room creation)
 
 - Add support for players needing to mark themselves as ready before countdown can be started
@@ -51,7 +49,8 @@ __Client__
 
 __Server__
 
-- Add support to white/blacklist certain gameidents and versions
+- Add support to white/blacklist certain game idents and versions
+- Limit number of messages / connections from hosts / IP ranges
 
 
 ## Usage / Installation / Dependencies

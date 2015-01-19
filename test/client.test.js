@@ -362,6 +362,71 @@ describe('Cobalt', function() {
 
         });
 
+        it('should start a room with a countdown and allow the owner to cancel the countdown', function(done) {
+
+            this.timeout(5000);
+
+            var countdown = 2,
+                events = {
+                    start: 0,
+                    update: 0,
+                    cancel: 0,
+                    end: 0
+                };
+
+            var client = getClient('cobalt', '0.01');
+
+            client.connect(port, 'localhost').then(function() {
+                return client.login('Testuser');
+
+            }).then(function(player) {
+                return client.createRoom('Testroom', 1, 8, 20);
+
+            }).then(function(room) {
+
+                room.on('countdown.start', function(c) {
+                    c.should.be.exactly(countdown);
+                    c.should.be.exactly(room.getCountdown());
+                    events.start++;
+                });
+
+                room.on('countdown.update', function(c) {
+
+                    c.should.be.exactly(countdown);
+                    c.should.be.exactly(room.getCountdown());
+
+                    events.update++;
+                    countdown--;
+
+                    room.cancel().then(function() {
+                        events.update.should.be.exactly(1);
+                        events.start.should.be.exactly(1);
+                        events.cancel.should.be.exactly(1);
+                        events.end.should.be.exactly(0);
+                        done();
+
+                    }, done).catch(done);
+
+                });
+
+                room.on('countdown.cancel', function() {
+                    room.getCountdown().should.be.exactly(-1);
+                    events.cancel++;
+                });
+
+                room.on('countdown.end', function() {
+                    room.getCountdown().should.be.exactly(-1);
+                    events.end++;
+                });
+
+                return room.start(countdown).then(function(room) {
+                    room.getCountdown().should.be.exactly(countdown);
+                });
+
+            }).catch(done);
+
+        });
+
         it('should start a room and correctly increase the ticks', function(done) {
 
             this.timeout(5000);
@@ -669,7 +734,7 @@ describe('Cobalt', function() {
 
             }, function(err) {
                 err.should.be.instanceof(Cobalt.Client.Error);
-                err.message.should.be.exactly('(46) ERROR_ROOM_INVALID_PASSWORD');
+                err.message.should.be.exactly('(48) ERROR_ROOM_INVALID_PASSWORD');
                 err.code.should.be.exactly(Cobalt.Action.ERROR_ROOM_INVALID_PASSWORD);
                 should(err.request).be.eql([room.getId(), 'invalidpass']);
                 should(err.response).be.eql(null);
@@ -1091,7 +1156,7 @@ describe('Cobalt', function() {
 
             }, function(err) {
                 err.should.be.instanceof(Cobalt.Client.Error);
-                err.message.should.be.exactly('(47) ERROR_PLAYER_NAME_IN_USE');
+                err.message.should.be.exactly('(49) ERROR_PLAYER_NAME_IN_USE');
                 err.code.should.be.exactly(Cobalt.Action.ERROR_PLAYER_NAME_IN_USE);
                 should(err.request).be.eql(['0.1', 'cobalt', '0.01', 'PlayerName']);
                 should(err.response).be.eql(null);
