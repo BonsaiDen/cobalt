@@ -1166,6 +1166,41 @@ describe('Cobalt', function() {
 
         });
 
+        it('should not allow setting any parameters after a room was started', function(done) {
+
+            var client = getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+                deffered.resolve();
+
+            }, function tickHandler(tick, players) {
+
+                client.getRooms().at(0).setParameter('key', 'value').then(function() {
+                    done(new Error('Should not be able to set parameters on a started room'));
+
+                }, function(err) {
+                    err.should.be.instanceof(Cobalt.Client.Error);
+                    err.message.should.be.exactly('(40) ERROR_ROOM_STARTED');
+                    err.code.should.be.exactly(Cobalt.Action.ERROR_ROOM_STARTED);
+                    should(err.request).be.eql(['key', 'value']);
+                    should(err.response).be.eql(null);
+                    done();
+
+                }).catch(done);
+
+            });
+
+            client.connect(port, 'localhost').then(function() {
+                return client.login('Testuser');
+
+            }).then(function(player) {
+                return client.createRoom('Testroom', 1, 8, 512);
+
+            }).then(function(room) {
+                return room.start(0);
+
+            }).catch(done);
+
+        });
+
     });
 
 });
