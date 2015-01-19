@@ -956,6 +956,35 @@ describe('Cobalt', function() {
 
         });
 
+        it('should only allow unique player names', function(done) {
+
+            var client = getClient('cobalt', '0.01'),
+                other = getClient('cobalt', '0.01');
+
+            client.connect(port, 'localhost').then(function(cl) {
+                return client.login('PlayerName');
+
+            }).then(function() {
+                return other.connect(port, 'localhost');
+
+            }).then(function() {
+                return other.login('PlayerName');
+
+            }).then(function() {
+                done(new Error('Should not be able to join the server with a player name that is already in use.'));
+
+            }, function(err) {
+                err.should.be.instanceof(Cobalt.Client.Error);
+                err.message.should.be.exactly('(44) ERROR_PLAYER_NAME_IN_USE');
+                err.code.should.be.exactly(Cobalt.Action.ERROR_PLAYER_NAME_IN_USE);
+                should(err.request).be.eql(['0.1', 'cobalt', '0.01', 'PlayerName']);
+                should(err.response).be.eql(null);
+                done();
+
+            }).catch(done);
+
+        });
+
     });
 
 });
