@@ -96,6 +96,23 @@ describe('Cobalt', function() {
 
         });
 
+        it('should handle server disconnects', function(done) {
+
+            var client = getClient('cobalt', '0.01');
+
+            client.connect(port, 'localhost').then(function(cl) {
+
+                client.on('close', function() {
+                    client.isConnected().should.be.exactly(false);
+                    done();
+                });
+
+                server.close();
+
+            }).catch(done);
+
+        });
+
         it('should be able to connect and disonnect from a server', function(done) {
 
             var client = getClient('cobalt', '0.01'),
@@ -140,6 +157,33 @@ describe('Cobalt', function() {
                 client.getRooms().should.have.length(0);
                 player.should.be.exactly(client.getPlayer());
                 done();
+
+            }).catch(done);
+
+        });
+
+        it('should handle server disconnects and destroy the local player', function(done) {
+
+            var client = getClient('cobalt', '0.01'),
+                event = false;
+
+            client.connect(port, 'localhost').then(function(cl) {
+
+                return client.login('Testuser');
+
+            }).then(function(player) {
+
+                player.on('destroy', function() {
+                    event = true;
+                });
+
+                client.on('close', function() {
+                    event.should.be.exactly(true);
+                    client.isConnected().should.be.exactly(false);
+                    done();
+                });
+
+                server.close();
 
             }).catch(done);
 
@@ -313,6 +357,56 @@ describe('Cobalt', function() {
                 if (tick === 513) {
                     done();
                 }
+
+            });
+
+            client.connect(port, 'localhost').then(function() {
+                return client.login('Testuser');
+
+            }).then(function(player) {
+                return client.createRoom('Testroom', 1, 8, 512);
+
+            }).then(function(room) {
+                return room.start(0);
+
+            }).catch(done);
+
+        });
+
+        it('should handle server disconnects and stop / destroy the local room', function(done) {
+
+            var events = {
+                player: 0,
+                leave: 0,
+                room: 0
+            };
+
+            var client = getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+                deffered.resolve();
+
+            }, function tickHandler(tick, players) {
+
+                client.getRooms().at(0).on('destroy', function() {
+                    events.room++;
+                });
+
+                client.on('room.leave', function() {
+                    events.leave++;
+                });
+
+                client.getPlayer().on('destroy', function() {
+                    events.player++;
+                });
+
+                client.on('close', function() {
+                    events.leave.should.be.exactly(1);
+                    events.room.should.be.exactly(1);
+                    events.player.should.be.exactly(1);
+                    client.isConnected().should.be.exactly(false);
+                    done();
+                });
+
+                server.close();
 
             });
 
