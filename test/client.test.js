@@ -48,7 +48,8 @@ function getClient(gameIdent, gameVersion, loadHandler, tickHandler) {
 beforeEach(function() {
     port = getPort();
     server = new Cobalt.Server({
-        maxTicksPerSecond: 512
+        maxTicksPerSecond: 512,
+        maxPlayers: 2
     });
     server.setLogger(function() {});
     server.listen(port);
@@ -1156,8 +1157,8 @@ describe('Cobalt', function() {
 
             }, function(err) {
                 err.should.be.instanceof(Cobalt.Client.Error);
-                err.message.should.be.exactly('(49) ERROR_PLAYER_NAME_IN_USE');
-                err.code.should.be.exactly(Cobalt.Action.ERROR_PLAYER_NAME_IN_USE);
+                err.message.should.be.exactly('(49) ERROR_SERVER_NAME_IN_USE');
+                err.code.should.be.exactly(Cobalt.Action.ERROR_SERVER_NAME_IN_USE);
                 should(err.request).be.eql(['0.1', 'cobalt', '0.01', 'PlayerName']);
                 should(err.response).be.eql(null);
                 done();
@@ -1196,6 +1197,41 @@ describe('Cobalt', function() {
 
             }).then(function(room) {
                 return room.start(0);
+
+            }).catch(done);
+
+        });
+
+        it('should limit the number of players which can simutaneously login', function(done) {
+
+            var a = getClient('cobalt', '0.01'),
+                b = getClient('cobalt', '0.01'),
+                c = getClient('cobalt', '0.01');
+
+            Promise.all([
+                a.connect(port, 'localhost'),
+                b.connect(port, 'localhost'),
+                c.connect(port, 'localhost')
+
+            ]).then(function() {
+
+                return Promise.all([
+                    a.login('User1'),
+                    b.login('User2')
+
+                ]).then(function() {
+                    return c.login('User3').then(function() {
+                        done(new Error('Should not allow a third user to login'));
+
+                    }, function(err) {
+                        err.should.be.instanceof(Cobalt.Client.Error);
+                        err.message.should.be.exactly('(51) ERROR_SERVER_MAX_PLAYERS');
+                        err.code.should.be.exactly(Cobalt.Action.ERROR_SERVER_MAX_PLAYERS);
+                        should(err.request).be.eql(['0.1', 'cobalt', '0.01', 'User3']);
+                        should(err.response).be.eql(null);
+                        done();
+                    });
+                });
 
             }).catch(done);
 
