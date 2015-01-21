@@ -1175,23 +1175,24 @@ describe('Cobalt', function() {
 
             }, function tickHandler(tick, players) {
 
-                client.getRooms().at(0).setParameter('key', 'value').then(function() {
-                    console.log('FAILED');
-                    done(new Error('Should not be able to set parameters on a started room'));
+                if (tick === 0) {
 
-                }, function(err) {
-                    console.log('SUCEESS'); // Is being called twice!
-                    err.should.be.instanceof(Cobalt.Client.Error);
-                    err.message.should.be.exactly('(40) ERROR_ROOM_STARTED');
-                    err.code.should.be.exactly(Cobalt.Action.ERROR_ROOM_STARTED);
-                    should(err.request).be.eql(['key', 'value']);
-                    should(err.response).be.eql(null);
-                    done();
+                    client.getRooms().at(0).setParameter('key', 'value').then(function() {
+                        done(new Error('Should not be able to set parameters on a started room'));
 
-                }).catch(function() {
-                    console.log('CATCHED INNER');
-                    done();
-                });
+                    }, function(err) {
+                        err.should.be.instanceof(Cobalt.Client.Error);
+                        err.message.should.be.exactly('(40) ERROR_ROOM_STARTED');
+                        err.code.should.be.exactly(Cobalt.Action.ERROR_ROOM_STARTED);
+                        should(err.request).be.eql(['key', 'value']);
+                        should(err.response).be.eql(null);
+                        done();
+
+                    }).catch(function() {
+                        done();
+                    });
+
+                }
 
             });
 
@@ -1205,7 +1206,6 @@ describe('Cobalt', function() {
                 return room.start(0);
 
             }).catch(function() {
-                console.log('CATCHED OUTER');
                 done();
             });
 
