@@ -6,7 +6,7 @@
   "homepage": "",
   "author": "Ivo Wetzel <ivo.wetzel@googlemail.com> (https://github.com/BonsaiDen)",
   "dependencies": {
-    "bison": "^1.1.1",
+    "bisonjs": "^2.0.1",
     "bluebird": "^2.6.2",
     "lithium": "^0.1.1"
   },
