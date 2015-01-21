@@ -49,7 +49,8 @@ beforeEach(function() {
     port = getPort();
     server = new Cobalt.Server({
         maxTicksPerSecond: 512,
-        maxPlayers: 2
+        maxPlayers: 2,
+        maxRooms: 1
     });
     server.setLogger(function() {});
     server.listen(port);
@@ -1175,9 +1176,11 @@ describe('Cobalt', function() {
             }, function tickHandler(tick, players) {
 
                 client.getRooms().at(0).setParameter('key', 'value').then(function() {
+                    console.log('FAILED');
                     done(new Error('Should not be able to set parameters on a started room'));
 
                 }, function(err) {
+                    console.log('SUCEESS'); // Is being called twice!
                     err.should.be.instanceof(Cobalt.Client.Error);
                     err.message.should.be.exactly('(40) ERROR_ROOM_STARTED');
                     err.code.should.be.exactly(Cobalt.Action.ERROR_ROOM_STARTED);
@@ -1185,7 +1188,10 @@ describe('Cobalt', function() {
                     should(err.response).be.eql(null);
                     done();
 
-                }).catch(done);
+                }).catch(function() {
+                    console.log('CATCHED INNER');
+                    done();
+                });
 
             });
 
@@ -1198,7 +1204,10 @@ describe('Cobalt', function() {
             }).then(function(room) {
                 return room.start(0);
 
-            }).catch(done);
+            }).catch(function() {
+                console.log('CATCHED OUTER');
+                done();
+            });
 
         });
 
@@ -1232,6 +1241,42 @@ describe('Cobalt', function() {
                         done();
                     });
                 });
+
+            }).catch(done);
+
+        });
+
+        it('should limit the number of rooms which can be open at once', function(done) {
+
+            var a = getClient('cobalt', '0.01'),
+                b = getClient('cobalt', '0.01');
+
+            Promise.all([
+                a.connect(port, 'localhost'),
+                b.connect(port, 'localhost'),
+
+            ]).then(function() {
+                return Promise.all([
+                    a.login('User1'),
+                    b.login('User2')
+                ]);
+
+            }).then(function() {
+                return a.createRoom('Testroom', 2, 8, 20);
+
+            }).then(function() {
+                return b.createRoom('Testroom', 2, 7, 20);
+
+            }).then(function() {
+                done(new Error('Should not allow a second room to be created'));
+
+            }, function(err) {
+                err.should.be.instanceof(Cobalt.Client.Error);
+                err.message.should.be.exactly('(52) ERROR_SERVER_MAX_ROOMS');
+                err.code.should.be.exactly(Cobalt.Action.ERROR_SERVER_MAX_ROOMS);
+                should(err.request).be.eql(['Testroom', 2, 7, 20, null]);
+                should(err.response).be.eql(null);
+                done();
 
             }).catch(done);
 
