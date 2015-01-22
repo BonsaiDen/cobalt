@@ -7,12 +7,10 @@ var net = require('net'),
     clients = [],
     port = 0;
 
-console.log('util');
-
 // Setup ----------------------------------------------------------------------
 global.WebSocket = WebSocket;
 
-function getPort() {
+beforeEach(function() {
 
     // Get an unused port by binding to 0 which makes the kernel select a
     // free port
@@ -23,28 +21,9 @@ function getPort() {
 
     // Then unbind from the port, this will cause it to stay open until
     // someone else binds to it explictly.
-    var port = s.address().port;
+    port = s.address().port;
     s.close();
 
-    return port;
-
-}
-
-function getClient(gameIdent, gameVersion, loadHandler, tickHandler) {
-
-    var client = new Cobalt.Client(
-        gameIdent, gameVersion, null, null, loadHandler, tickHandler
-    );
-
-    client.setLogger(function() {});
-    clients.push(client);
-
-    return client;
-
-}
-
-beforeEach(function() {
-    port = getPort();
     server = new Cobalt.Server({
         maxConnectionIdleTime: 150,
         maxTicksPerSecond: 512,
@@ -54,6 +33,7 @@ beforeEach(function() {
     });
     server.setLogger(function() {});
     server.listen(port);
+
 });
 
 afterEach(function(done) {
@@ -73,10 +53,20 @@ afterEach(function(done) {
 
 });
 
-
 module.exports = {
 
-    getClient: getClient,
+    getClient: function(gameIdent, gameVersion, loadHandler, tickHandler) {
+
+        var client = new Cobalt.Client(
+            gameIdent, gameVersion, null, null, loadHandler, tickHandler
+        );
+
+        client.setLogger(function() {});
+        clients.push(client);
+
+        return client;
+
+    },
 
     getServer: function() {
         return server;
