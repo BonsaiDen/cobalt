@@ -4,7 +4,7 @@ Cobalt - Minimal Lockstep Game Server
 Cobalt is JavaScript based, minimal client / server framework for creating games based on the
 [lockstep protocol](http://en.wikipedia.org/wiki/Lockstep_protocol).
 
-It serves as game independent messaging server between the clients.
+It serves as a game independent messaging server between clients.
 
 
 ## Features
