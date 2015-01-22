@@ -99,6 +99,23 @@ describe('Cobalt', function() {
 
         });
 
+        it('should handle failed connections attempts', function(done) {
+
+            var client = getClient('cobalt', '0.01');
+
+            server.close();
+
+            client.connect(port, 'localhost').then(function() {
+                done(new Error('Should not succeed on failed connections'));
+
+            }, function(byRemote) {
+                byRemote.should.be.exactly(true);
+                done();
+
+            }).catch(done);
+
+        });
+
         it('should handle server disconnects', function(done) {
 
             var client = getClient('cobalt', '0.01');
