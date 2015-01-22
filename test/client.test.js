@@ -50,6 +50,7 @@ beforeEach(function() {
     server = new Cobalt.Server({
         maxConnectionIdleTime: 150,
         maxTicksPerSecond: 512,
+        maxPlayerEventsPerTick: 8,
         maxPlayers: 2,
         maxRooms: 1
     });
