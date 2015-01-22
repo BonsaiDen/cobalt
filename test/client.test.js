@@ -48,6 +48,7 @@ function getClient(gameIdent, gameVersion, loadHandler, tickHandler) {
 beforeEach(function() {
     port = getPort();
     server = new Cobalt.Server({
+        maxConnectionIdleTime: 150,
         maxTicksPerSecond: 512,
         maxPlayers: 2,
         maxRooms: 1
@@ -128,13 +129,15 @@ describe('Cobalt', function() {
                 should(cl).be.exactly(client);
                 client.isConnected().should.be.exactly(true);
 
-                client.on('close', function() {
+                client.on('close', function(byRemote) {
+                    byRemote.should.be.exactly(false);
                     event = true;
                 });
 
                 return client.close();
 
-            }).then(function(status) {
+            }).then(function(byRemote) {
+                byRemote.should.be.exactly(false);
                 client.isConnected().should.be.exactly(false);
                 should(event).be.exactly(true);
                 done();
@@ -487,7 +490,8 @@ describe('Cobalt', function() {
                     events.player++;
                 });
 
-                client.on('close', function() {
+                client.on('close', function(byRemote) {
+                    byRemote.should.be.exactly(true);
                     events.leave.should.be.exactly(1);
                     events.room.should.be.exactly(1);
                     events.player.should.be.exactly(1);
@@ -1280,6 +1284,19 @@ describe('Cobalt', function() {
 
             }).catch(done);
 
+        });
+
+        it('should drop idle connections which do not perform a login within a given timeframe', function(done) {
+
+            this.timeout(250);
+
+            var client = getClient('cobalt', '0.01');
+            client.connect(port, 'localhost').then(function() {
+                client.on('close', function(byRemote) {
+                    byRemote.should.be.exactly(true);
+                    done();
+                });
+            });
         });
 
     });
