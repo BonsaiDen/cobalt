@@ -464,7 +464,7 @@ describe('Cobalt', function() {
                 should(tick - lastTick).be.exactly(1);
                 lastTick = tick;
 
-                if (tick === 513) {
+                if (tick === 257) {
                     done();
                 }
 
@@ -1316,6 +1316,9 @@ describe('Cobalt', function() {
                 });
             });
         });
+
+        // TODO test all sorts of action response errors and handling of invalid
+        // messages
 
     });
 
