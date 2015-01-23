@@ -3,14 +3,28 @@
 var net = require('net'),
     Cobalt = require('../lib'),
     WebSocket = require('websocket').w3cwebsocket,
+    networkInterface = null,
     server = null,
     clients = [],
     port = 0;
+
+// Select Network Interface ---------------------------------------------------
+
 
 // Setup ----------------------------------------------------------------------
 global.WebSocket = WebSocket;
 
 beforeEach(function() {
+
+    // Setup Network Interface
+    if (process.env.NETWORK_INTERFACE === 'loopback') {
+        var Loopback = require('../lib/client/Loopback');
+        networkInterface = new Loopback();
+
+    } else {
+        networkInterface = null;
+    }
+
 
     // Get an unused port by binding to 0 which makes the kernel select a
     // free port
@@ -30,7 +44,9 @@ beforeEach(function() {
         maxPlayerEventsPerTick: 8,
         maxPlayers: 2,
         maxRooms: 1
-    });
+
+    }, networkInterface);
+
     server.setLogger(function() {});
     server.listen(port);
 
@@ -53,12 +69,18 @@ afterEach(function(done) {
 
 });
 
+// Test Interface -------------------------------------------------------------
 module.exports = {
+
+    getInterfaceName: function() {
+        return '(' + (process.env.NETWORK_INTERFACE || 'WebSocket') + ')';
+    },
 
     getClient: function(gameIdent, gameVersion, loadHandler, tickHandler) {
 
         var client = new Cobalt.Client(
-            gameIdent, gameVersion, null, null, loadHandler, tickHandler
+            gameIdent, gameVersion, null, null, loadHandler, tickHandler,
+            networkInterface
         );
 
         client.setLogger(function() {});

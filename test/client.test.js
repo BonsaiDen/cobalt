@@ -1,19 +1,20 @@
 // Dependencies ---------------------------------------------------------------
 // ----------------------------------------------------------------------------
 var should = require('should'),
-    util = require('./util'),
+    test = require('./test'),
     Cobalt = require('../lib'),
     Promise = require('bluebird'),
     Deferred = Promise.defer().constructor;
 
 // Tests ----------------------------------------------------------------------
-describe('Cobalt', function() {
+
+describe('Cobalt ' + test.getInterfaceName(), function() {
 
     describe('Client', function() {
 
         it('should create and destroy a Client instance', function() {
 
-            var client = util.getClient('cobalt', '0.01');
+            var client = test.getClient('cobalt', '0.01');
             client.should.be.instanceof(Cobalt.Client);
 
             client.getGameIdent().should.be.exactly('cobalt');
@@ -32,11 +33,11 @@ describe('Cobalt', function() {
 
         it('should handle failed connections attempts', function(done) {
 
-            var client = util.getClient('cobalt', '0.01');
+            var client = test.getClient('cobalt', '0.01');
 
-            util.getServer().close();
+            test.getServer().close();
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 done(new Error('Should not succeed on failed connections'));
 
             }, function(byRemote) {
@@ -47,31 +48,14 @@ describe('Cobalt', function() {
 
         });
 
-        it('should handle server disconnects', function(done) {
-
-            var client = util.getClient('cobalt', '0.01');
-
-            client.connect(util.getPort(), 'localhost').then(function(cl) {
-
-                client.on('close', function() {
-                    client.isConnected().should.be.exactly(false);
-                    done();
-                });
-
-                util.getServer().close();
-
-            }).catch(done);
-
-        });
-
         it('should be able to connect and disonnect from a server', function(done) {
 
-            var client = util.getClient('cobalt', '0.01'),
+            var client = test.getClient('cobalt', '0.01'),
                 event = false;
 
             client.isConnected().should.be.exactly(false);
 
-            client.connect(util.getPort(), 'localhost').then(function(cl) {
+            client.connect(test.getPort(), 'localhost').then(function(cl) {
 
                 should(cl).be.instanceof(Cobalt.Client);
                 should(cl).be.exactly(client);
@@ -94,11 +78,29 @@ describe('Cobalt', function() {
 
         });
 
+        it('should handle server disconnects', function(done) {
+
+            var client = test.getClient('cobalt', '0.01');
+
+            client.connect(test.getPort(), 'localhost').then(function(cl) {
+
+                client.on('close', function() {
+                    client.isConnected().should.be.exactly(false);
+                    done();
+                });
+
+                test.getServer().close();
+
+            }).catch(done);
+
+        });
+
+
         it('should login with a valid game identifier, game version and player name', function(done) {
 
-            var client = util.getClient('cobalt', '0.01');
+            var client = test.getClient('cobalt', '0.01');
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 should(client.getPlayer()).be.exactly(null);
                 return client.login('Testuser');
 
@@ -117,10 +119,10 @@ describe('Cobalt', function() {
 
         it('should handle server disconnects and destroy the local player', function(done) {
 
-            var client = util.getClient('cobalt', '0.01'),
+            var client = test.getClient('cobalt', '0.01'),
                 event = false;
 
-            client.connect(util.getPort(), 'localhost').then(function(cl) {
+            client.connect(test.getPort(), 'localhost').then(function(cl) {
 
                 return client.login('Testuser');
 
@@ -136,7 +138,7 @@ describe('Cobalt', function() {
                     done();
                 });
 
-                util.getServer().close();
+                test.getServer().close();
 
             }).catch(done);
 
@@ -144,7 +146,7 @@ describe('Cobalt', function() {
 
         it('should create a new room, become the owner and set the room options', function(done) {
 
-            var client = util.getClient('cobalt', '0.01'),
+            var client = test.getClient('cobalt', '0.01'),
                 event = {
                     rooms: 0,
                     players: 0,
@@ -153,7 +155,7 @@ describe('Cobalt', function() {
                 },
                 rooms = client.getRooms();
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
 
                 client.once('rooms', function(rooms) {
                     rooms.should.have.length(0);
@@ -212,7 +214,7 @@ describe('Cobalt', function() {
 
         it('should directly start a room without any countdown and run the load and tick handlers', function(done) {
 
-            var client = util.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+            var client = test.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
                 should(params).instanceof(Object);
                 should(deffered).instanceof(Deferred);
                 deffered.resolve();
@@ -237,7 +239,7 @@ describe('Cobalt', function() {
 
             var event = 0;
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function(player) {
@@ -269,7 +271,7 @@ describe('Cobalt', function() {
                     end: 0
                 };
 
-            var client = util.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+            var client = test.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
                 client.getRooms().at(0).getCountdown().should.be.exactly(0);
                 deffered.resolve();
 
@@ -281,7 +283,7 @@ describe('Cobalt', function() {
                 done();
             });
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function(player) {
@@ -327,9 +329,9 @@ describe('Cobalt', function() {
                     end: 0
                 };
 
-            var client = util.getClient('cobalt', '0.01');
+            var client = test.getClient('cobalt', '0.01');
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function(player) {
@@ -386,7 +388,7 @@ describe('Cobalt', function() {
 
             var lastTick = -1;
 
-            var client = util.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+            var client = test.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
                 deffered.resolve();
 
             }, function tickHandler(tick, players) {
@@ -400,7 +402,7 @@ describe('Cobalt', function() {
 
             });
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function(player) {
@@ -421,7 +423,7 @@ describe('Cobalt', function() {
                 room: 0
             };
 
-            var client = util.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+            var client = test.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
                 deffered.resolve();
 
             }, function tickHandler(tick, players) {
@@ -447,11 +449,11 @@ describe('Cobalt', function() {
                     done();
                 });
 
-                util.getServer().close();
+                test.getServer().close();
 
             });
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function(player) {
@@ -466,7 +468,7 @@ describe('Cobalt', function() {
 
         it('should leave a room', function(done) {
 
-            var client = util.getClient('cobalt', '0.01'),
+            var client = test.getClient('cobalt', '0.01'),
                 event = {
                     room: 0,
                     player: 0,
@@ -474,7 +476,7 @@ describe('Cobalt', function() {
                 },
                 rooms = client.getRooms();
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function(player) {
@@ -515,7 +517,7 @@ describe('Cobalt', function() {
 
         it('should join a existing room', function(done) {
 
-            var client = util.getClient('cobalt', '0.01'),
+            var client = test.getClient('cobalt', '0.01'),
                 room, other, otherRooms,
                 events = {
                     join: 0,
@@ -523,7 +525,7 @@ describe('Cobalt', function() {
                     update: 0
                 };
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function() {
@@ -531,9 +533,9 @@ describe('Cobalt', function() {
 
             }).then(function(r) {
                 room = r;
-                other = util.getClient('cobalt', '0.01');
+                other = test.getClient('cobalt', '0.01');
                 otherRooms = other.getRooms();
-                return other.connect(util.getPort(), 'localhost');
+                return other.connect(test.getPort(), 'localhost');
 
             }).then(function() {
                 return other.login('Otheruser');
@@ -584,7 +586,7 @@ describe('Cobalt', function() {
 
         it('should send player events and receive them back on the next tick in a started room', function(done) {
 
-            var client = util.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+            var client = test.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
                 deffered.resolve();
 
             }, function tickHandler(tick, players) {
@@ -619,7 +621,7 @@ describe('Cobalt', function() {
 
             });
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function(player) {
@@ -634,18 +636,18 @@ describe('Cobalt', function() {
 
         it('should join a existing room with a password', function(done) {
 
-            var client = util.getClient('cobalt', '0.01'),
+            var client = test.getClient('cobalt', '0.01'),
                 other;
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function() {
                 return client.createRoom('Testroom', 2, 8, 20, 'passphrase');
 
             }).then(function(r) {
-                other = util.getClient('cobalt', '0.01');
-                return other.connect(util.getPort(), 'localhost');
+                other = test.getClient('cobalt', '0.01');
+                return other.connect(test.getPort(), 'localhost');
 
             }).then(function() {
                 return other.login('Otheruser');
@@ -662,11 +664,11 @@ describe('Cobalt', function() {
 
         it('should fail to join a existing room with a incorrect password', function(done) {
 
-            var client = util.getClient('cobalt', '0.01'),
+            var client = test.getClient('cobalt', '0.01'),
                 room = null,
                 other;
 
-            client.connect(util.getPort(), 'localhost').then(function() {
+            client.connect(test.getPort(), 'localhost').then(function() {
                 return client.login('Testuser');
 
             }).then(function() {
@@ -674,8 +676,8 @@ describe('Cobalt', function() {
 
             }).then(function(r) {
                 room = r;
-                other = util.getClient('cobalt', '0.01');
-                return other.connect(util.getPort(), 'localhost');
+                other = test.getClient('cobalt', '0.01');
+                return other.connect(test.getPort(), 'localhost');
 
             }).then(function() {
                 return other.login('Otheruser');
