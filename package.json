@@ -16,11 +16,12 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "browserify": "~8.1.1",
+    "grunt-env": "^0.4.2",
     "grunt-mocha-istanbul": "^2.2.0",
     "grunt-mocha-test": "^0.12.6",
     "istanbul": "^0.3.5",
     "should": "^4.5.0",
-    "websocket": "^1.0.14",
-    "browserify": "~8.1.1"
+    "websocket": "^1.0.14"
   }
 }
