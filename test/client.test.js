@@ -225,6 +225,8 @@ describe('Cobalt ' + test.getInterfaceName(), function() {
         it('should directly start a room without any countdown and run the load and tick handlers', function(done) {
 
             var client = test.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
+                client.getRooms().at(0).getSeed().should.be.a.Number;
+                client.getRooms().at(0).getPlayerOrder().should.be.eql([client.getPlayer().getId()]);
                 should(params).instanceof(Object);
                 should(deffered).instanceof(Deferred);
                 deffered.resolve();
