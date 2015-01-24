@@ -12,6 +12,16 @@ describe('Cobalt ' + test.getInterfaceName(), function() {
 
     describe('Client', function() {
 
+        it('should support setting and getting an abritrary parent object', function() {
+
+            var client = test.getClient('cobalt', '0.01'),
+                parent = {};
+
+            client.setParent(parent);
+            client.getParent().should.be.exactly(parent);
+
+        });
+
         it('should create and destroy a Client instance', function() {
 
             var client = test.getClient('cobalt', '0.01');
