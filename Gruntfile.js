@@ -61,6 +61,13 @@ module.exports = function(grunt) {
 
         b.add('./lib/client/index.js');
         b.exclude('node_modules/bluebird/js/main/bluebird.js');
+        b.exclude('node_modules/lithium/lib/Emitter.js');
+        b.exclude('node_modules/lithium/lib/index.js');
+        b.exclude('node_modules/lithium/lib/Protocol.js');
+        b.exclude('node_modules/lithium/lib/Protocol13.js');
+        b.exclude('node_modules/lithium/lib/Protocol6.js');
+        b.exclude('node_modules/lithium/lib/Remote.js');
+        b.exclude('node_modules/lithium/lib/Server.js');
 
         b.bundle(function(err, buf) {
 
