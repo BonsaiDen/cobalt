@@ -226,7 +226,7 @@ describe('Cobalt ' + test.getInterfaceName(), function() {
 
             var client = test.getClient('cobalt', '0.01', function loadHandler(params, deffered) {
                 client.getRooms().at(0).getSeed().should.be.a.Number;
-                client.getRooms().at(0).getPlayerOrder().should.be.eql([client.getPlayer().getId()]);
+                client.getPlayer().getRandomIndex().should.be.exactly(0);
                 should(params).instanceof(Object);
                 should(deffered).instanceof(Deferred);
                 deffered.resolve();
